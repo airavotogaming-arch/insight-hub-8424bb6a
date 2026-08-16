@@ -176,6 +176,10 @@ function ProfilePage() {
             <strong>{(board[0]?.score ?? 0).toLocaleString()}</strong>
             <span>BEST SCORE</span>
           </div>
+          <div className="pf-stat">
+            <strong>{formatPlayTime(playTime)}</strong>
+            <span>TIME PLAYED</span>
+          </div>
         </div>
 
         <button className="pf-share" onClick={shareCard} disabled={sharing}>
