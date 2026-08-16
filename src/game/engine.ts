@@ -1369,6 +1369,16 @@ export class CarnivalGame {
     const frozen = this.state.phase === "paused";
     const dt = frozen ? 0 : rdt * this.timeScale;
     this.simTime += dt;
+
+    // track total wall-clock play time and flush to storage in chunks
+    if (this.state.phase === "playing" && !frozen) {
+      this.playTimeAcc += rdt;
+      if (this.playTimeAcc >= this.PLAY_TIME_FLUSH) {
+        addPlayTime(Math.floor(this.playTimeAcc));
+        this.playTimeAcc = 0;
+      }
+    }
+
     const t = this.simTime;
     this.frame++;
     this.carnival?.update(t, frozen ? 0 : rdt);
