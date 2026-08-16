@@ -38,6 +38,7 @@ import { GunIcon } from "@/components/GunIcon";
 import { TOY_SPECS, type ToyKind } from "@/game/toys";
 import { Crosshair } from "@/components/Crosshair";
 import { CountUp } from "@/components/CountUp";
+import { SafeImage } from "@/components/SafeImage";
 import { asset } from "@/lib/assetUrl";
 import {
   initPlaygama,
