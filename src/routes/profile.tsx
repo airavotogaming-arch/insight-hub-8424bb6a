@@ -55,6 +55,7 @@ function ProfilePage() {
   const [coins, setCoins] = useState(0);
   const [board, setBoard] = useState<ScoreEntry[]>([]);
   const [history, setHistory] = useState<MatchEntry[]>([]);
+  const [playTime, setPlayTime] = useState(0);
   const [tab, setTab] = useState<"scores" | "history">("scores");
   const [levelFilter, setLevelFilter] = useState("");
   const [sort, setSort] = useState<"newest" | "score">("newest");
