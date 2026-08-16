@@ -1968,6 +1968,7 @@ export class CarnivalGame {
 
   dispose() {
     this.disposed = true;
+    this.flushPlayTime();
     cancelAnimationFrame(this.raf);
     window.removeEventListener("resize", this.resize);
     window.removeEventListener("orientationchange", this.resize);
