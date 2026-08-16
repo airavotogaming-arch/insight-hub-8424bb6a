@@ -1064,15 +1064,16 @@ export default function ShootingGallery() {
 
             <div className="warning-list">
               <div className="warning-row bad">
-                <img className="warning-thumb" src={asset("toys/bomb.png")} alt="Bomb" width={44} height={44} />
+                <SafeImage className="warning-thumb" src={asset("toys/bomb.png")} alt="Bomb" fallbackLabel="💣" width={44} height={44} />
                 <span>
                   <strong>Bombs</strong> blow 5 seconds off the clock and reset your combo. Never shoot them.
                 </span>
               </div>
               <div className="warning-row forbidden">
                 {state.forbidden ? (
-                  <img
+                  <SafeImage
                     className="warning-thumb"
+                    fallbackLabel="🧸"
                     src={asset(`toys/${state.forbidden}.png`)}
                     alt={TOY_SPECS[state.forbidden].label}
                     width={44}
@@ -1548,7 +1549,7 @@ export default function ShootingGallery() {
                       const spec = TOY_SPECS[kind];
                       return (
                         <li key={kind} className={`object-row ${spec.points < 0 ? "bad" : ""}`}>
-                          <img className="object-thumb" src={asset(`toys/${kind}.png`)} alt={spec.label} loading="lazy" width={36} height={36} />
+                          <SafeImage className="object-thumb" fallbackLabel="🧸" src={asset(`toys/${kind}.png`)} alt={spec.label} loading="lazy" width={36} height={36} />
                           <span className="object-name">{spec.label}</span>
                           <span className="object-pts">
                             {spec.points > 0 ? `+${spec.points}` : spec.points}
