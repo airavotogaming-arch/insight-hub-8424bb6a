@@ -7,6 +7,7 @@ import { buildBooth, SHELVES } from "./booth";
 import { buildCarnival, type CarnivalEnv } from "./carnival";
 import { buildBlaster } from "./blaster";
 import { getGunSkin } from "./guns";
+import { addPlayTime } from "./stats";
 import { buildToy, PICKABLE, TOY_SPECS, type ToyKind } from "./toys";
 import { secureSet, safeInt, secureGetOrMigrate, legacyNumber } from "./secureStore";
 
