@@ -11,6 +11,7 @@ import {
 import { getRewardState } from "./rewards";
 import { getBestStreak } from "./daily";
 import { getSpinState } from "./spin";
+import { getDiamonds, setDiamonds } from "./diamonds";
 
 const CLAIMED = "carnival-achv-claimed";
 
@@ -21,6 +22,8 @@ export interface AchievementDef {
   icon: string;
   target: number;
   reward: number;
+  /** diamonds paid out on claim — diamonds only come from missions and ads */
+  gems: number;
   /** current progress, read live from saved game state */
   value: () => number;
   /** how the number reads in the UI */
@@ -30,20 +33,20 @@ export interface AchievementDef {
 const num = (n: number) => n.toLocaleString();
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-  { id: "first-blast", name: "First Blast", blurb: "Finish your first match", icon: "🎯", target: 1, reward: 20, value: getMatchesPlayed },
-  { id: "regular", name: "Carnival Regular", blurb: "Finish 10 matches", icon: "🎪", target: 10, reward: 80, value: getMatchesPlayed },
-  { id: "veteran", name: "Fairground Veteran", blurb: "Finish 50 matches", icon: "🏟️", target: 50, reward: 300, value: getMatchesPlayed },
-  { id: "sharp", name: "Sharpshooter", blurb: "Score 5,000 in one match", icon: "🔫", target: 5000, reward: 60, value: () => getBoard()[0]?.score ?? 0, format: num },
-  { id: "marks", name: "Marksman", blurb: "Score 25,000 in one match", icon: "⭐", target: 25000, reward: 180, value: () => getBoard()[0]?.score ?? 0, format: num },
-  { id: "legend", name: "Gallery Legend", blurb: "Score 100,000 in one match", icon: "👑", target: 100000, reward: 600, value: () => getBoard()[0]?.score ?? 0, format: num },
-  { id: "climb-5", name: "Climbing Up", blurb: "Reach level 5", icon: "🪜", target: 5, reward: 70, value: getMaxLevel },
-  { id: "climb-15", name: "Top of the Tent", blurb: "Reach level 15", icon: "🎢", target: 15, reward: 240, value: getMaxLevel },
-  { id: "sights", name: "Sight Collector", blurb: "Own 3 crosshairs", icon: "🎯", target: 3, reward: 100, value: () => getOwned().length },
-  { id: "armory", name: "Little Armory", blurb: "Own 3 blasters", icon: "🧰", target: 3, reward: 140, value: () => getOwnedGuns().length },
-  { id: "banker", name: "Ticket Banker", blurb: "Hold 5,000 coins at once", icon: "🪙", target: 5000, reward: 120, value: getBank, format: num },
-  { id: "boxes", name: "Box Breaker", blurb: "Open 3 mystery boxes", icon: "🎁", target: 3, reward: 130, value: () => getRewardState().claimed },
-  { id: "streak", name: "Daily Devotee", blurb: "Hit a 3 day gift streak", icon: "📅", target: 3, reward: 160, value: getBestStreak },
-  { id: "spinner", name: "Wheel Spinner", blurb: "Spin the lucky wheel 10 times", icon: "🎡", target: 10, reward: 150, value: () => getSpinState().totalSpins },
+  { id: "first-blast", name: "First Blast", blurb: "Finish your first match", icon: "🎯", target: 1, reward: 20, gems: 1, value: getMatchesPlayed },
+  { id: "regular", name: "Carnival Regular", blurb: "Finish 10 matches", icon: "🎪", target: 10, reward: 80, gems: 1, value: getMatchesPlayed },
+  { id: "veteran", name: "Fairground Veteran", blurb: "Finish 50 matches", icon: "🏟️", target: 50, reward: 300, gems: 5, value: getMatchesPlayed },
+  { id: "sharp", name: "Sharpshooter", blurb: "Score 5,000 in one match", icon: "🔫", target: 5000, reward: 60, gems: 1, value: () => getBoard()[0]?.score ?? 0, format: num },
+  { id: "marks", name: "Marksman", blurb: "Score 25,000 in one match", icon: "⭐", target: 25000, reward: 180, gems: 3, value: () => getBoard()[0]?.score ?? 0, format: num },
+  { id: "legend", name: "Gallery Legend", blurb: "Score 100,000 in one match", icon: "👑", target: 100000, reward: 600, gems: 10, value: () => getBoard()[0]?.score ?? 0, format: num },
+  { id: "climb-5", name: "Climbing Up", blurb: "Reach level 5", icon: "🪜", target: 5, reward: 70, gems: 1, value: getMaxLevel },
+  { id: "climb-15", name: "Top of the Tent", blurb: "Reach level 15", icon: "🎢", target: 15, reward: 240, gems: 4, value: getMaxLevel },
+  { id: "sights", name: "Sight Collector", blurb: "Own 3 crosshairs", icon: "🎯", target: 3, reward: 100, gems: 2, value: () => getOwned().length },
+  { id: "armory", name: "Little Armory", blurb: "Own 3 blasters", icon: "🧰", target: 3, reward: 140, gems: 2, value: () => getOwnedGuns().length },
+  { id: "banker", name: "Ticket Banker", blurb: "Hold 5,000 coins at once", icon: "🪙", target: 5000, reward: 120, gems: 2, value: getBank, format: num },
+  { id: "boxes", name: "Box Breaker", blurb: "Open 3 mystery boxes", icon: "🎁", target: 3, reward: 130, gems: 2, value: () => getRewardState().claimed },
+  { id: "streak", name: "Daily Devotee", blurb: "Hit a 3 day gift streak", icon: "📅", target: 3, reward: 160, gems: 3, value: getBestStreak },
+  { id: "spinner", name: "Wheel Spinner", blurb: "Spin the lucky wheel 10 times", icon: "🎡", target: 10, reward: 150, gems: 2, value: () => getSpinState().totalSpins },
 ];
 
 export interface AchievementRow extends AchievementDef {
@@ -76,24 +79,29 @@ export function getAchievements(): AchievementRow[] {
   });
 }
 
-export function claimAchievement(id: string): { ok: boolean; reward: number; bank: number } {
+export function claimAchievement(
+  id: string,
+): { ok: boolean; reward: number; gems: number; bank: number } {
   const row = getAchievements().find((a) => a.id === id);
-  if (!row || !row.claimable) return { ok: false, reward: 0, bank: getBank() };
+  if (!row || !row.claimable) return { ok: false, reward: 0, gems: 0, bank: getBank() };
   setBank(getBank() + row.reward);
+  setDiamonds(getDiamonds() + row.gems);
   secureSet(CLAIMED, [...new Set([...getClaimedIds(), id])]);
-  return { ok: true, reward: row.reward, bank: getBank() };
+  return { ok: true, reward: row.reward, gems: row.gems, bank: getBank() };
 }
 
-export function claimAllAchievements(): { count: number; reward: number; bank: number } {
+export function claimAllAchievements(): { count: number; reward: number; gems: number; bank: number } {
   let count = 0;
   let reward = 0;
+  let gems = 0;
   for (const row of getAchievements()) {
     if (!row.claimable) continue;
     const res = claimAchievement(row.id);
     if (res.ok) {
       count += 1;
       reward += row.reward;
+      gems += row.gems;
     }
   }
-  return { count, reward, bank: getBank() };
+  return { count, reward, gems, bank: getBank() };
 }
