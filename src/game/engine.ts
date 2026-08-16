@@ -278,6 +278,10 @@ export class CarnivalGame {
   /** render through the post-processing composer (desktop) or direct (mobile) */
   private postFx = true;
 
+  /** accumulates seconds of real play time before flushing to storage */
+  private playTimeAcc = 0;
+  private readonly PLAY_TIME_FLUSH = 5;
+
   state: GameState = {
     score: 0,
     best: 0,
