@@ -2237,7 +2237,7 @@ html {
   background: rgba(0,0,0,0.35); border: 2px solid rgba(255,200,74,0.5); outline: none;
 }
 .pf-field input:focus { border-color: #ffc84a; }
-.pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.pf-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
 .pf-stat { display: grid; gap: 2px; place-items: center; padding: 0.6rem 0.3rem; border-radius: 0.7rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); }
 .pf-stat strong { font-family: var(--font-fair); font-size: 1rem; color: #ffd76a; }
 .pf-stat span { font-size: 0.55rem; letter-spacing: 0.08em; color: #cbb8f2; }
