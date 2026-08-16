@@ -132,6 +132,7 @@ export interface MatchEntry {
   score: number;
   level: number;
   at: number; // epoch ms
+  dur?: number; // round duration in seconds
 }
 
 const HISTORY = "carnival-history";
@@ -146,6 +147,7 @@ export const getHistory = (): MatchEntry[] =>
       score: safeInt(e.score, MAX_SCORE),
       level: Math.max(1, safeInt(e.level, 999)),
       at: safeInt(e.at),
+      dur: Math.max(0, safeInt(e.dur ?? 0, 99_999)),
     }))
     .slice(0, MAX_HISTORY);
 
@@ -153,13 +155,19 @@ export const getHistory = (): MatchEntry[] =>
 export const getMatchesPlayed = () =>
   Math.max(safeInt(secureGet<number>(PLAYED, 0), 999_999), getHistory().length);
 
-export const addMatch = (name: string, score: number, level: number): MatchEntry[] => {
+export const addMatch = (
+  name: string,
+  score: number,
+  level: number,
+  dur = 0,
+): MatchEntry[] => {
   secureSet(PLAYED, getMatchesPlayed() + 1);
   const entry: MatchEntry = {
     name: name.trim().slice(0, 14).toUpperCase(),
     score: safeInt(score, MAX_SCORE),
     level: Math.max(1, safeInt(level, 999)),
     at: Date.now(),
+    dur: Math.max(0, safeInt(dur, 99_999)),
   };
   const next = [entry, ...getHistory()].slice(0, MAX_HISTORY);
   secureSet(HISTORY, next);
@@ -175,4 +183,42 @@ export const renameHistoryEntries = (from: string, to: string): MatchEntry[] => 
   const next = hist.map((e) => (!oldName || e.name === oldName ? { ...e, name: newName } : e));
   secureSet(HISTORY, next);
   return next;
+};
+
+/* ---------- speed board (ranked by fastest run) ---------- */
+export interface SpeedEntry {
+  name: string;
+  dur: number; // seconds
+  level: number;
+  score: number;
+}
+
+/**
+ * Best (fastest) completed run per player, ordered fastest-first.
+ * Higher level wins ties so a deeper clear always outranks a shallow one.
+ */
+export const getSpeedBoard = (limit = 10): SpeedEntry[] => {
+  const best = new Map<string, SpeedEntry>();
+  for (const m of getHistory()) {
+    const dur = Math.max(0, safeInt(m.dur ?? 0, 99_999));
+    if (!m.name || dur <= 0) continue;
+    const prev = best.get(m.name);
+    const better =
+      !prev || m.level > prev.level || (m.level === prev.level && dur < prev.dur);
+    if (better) best.set(m.name, { name: m.name, dur, level: m.level, score: m.score });
+  }
+  return [...best.values()]
+    .sort((a, b) => b.level - a.level || a.dur - b.dur || b.score - a.score)
+    .slice(0, limit);
+};
+
+/** Formats a run duration as M:SS (or H:MM:SS). */
+export const formatDuration = (seconds: number): string => {
+  const s = Math.max(0, Math.floor(safeInt(seconds, 99_999)));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+    : `${m}:${String(sec).padStart(2, "0")}`;
 };
