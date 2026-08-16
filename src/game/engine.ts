@@ -7,6 +7,7 @@ import { buildBooth, SHELVES } from "./booth";
 import { buildCarnival, type CarnivalEnv } from "./carnival";
 import { buildBlaster } from "./blaster";
 import { getGunSkin } from "./guns";
+import { addPlayTime } from "./stats";
 import { buildToy, PICKABLE, TOY_SPECS, type ToyKind } from "./toys";
 import { secureSet, safeInt, secureGetOrMigrate, legacyNumber } from "./secureStore";
 
@@ -276,6 +277,10 @@ export class CarnivalGame {
 
   /** render through the post-processing composer (desktop) or direct (mobile) */
   private postFx = true;
+
+  /** accumulates seconds of real play time before flushing to storage */
+  private playTimeAcc = 0;
+  private readonly PLAY_TIME_FLUSH = 5;
 
   state: GameState = {
     score: 0,
@@ -1364,6 +1369,16 @@ export class CarnivalGame {
     const frozen = this.state.phase === "paused";
     const dt = frozen ? 0 : rdt * this.timeScale;
     this.simTime += dt;
+
+    // track total wall-clock play time and flush to storage in chunks
+    if (this.state.phase === "playing" && !frozen) {
+      this.playTimeAcc += rdt;
+      if (this.playTimeAcc >= this.PLAY_TIME_FLUSH) {
+        addPlayTime(Math.floor(this.playTimeAcc));
+        this.playTimeAcc = 0;
+      }
+    }
+
     const t = this.simTime;
     this.frame++;
     this.carnival?.update(t, frozen ? 0 : rdt);
@@ -1939,12 +1954,21 @@ export class CarnivalGame {
       secureSet(BEST_KEY, this.state.best);
     }
     this.blip(440, 0.5, "sine", 0.09, 180);
+    this.flushPlayTime();
     this.emit();
+  }
+
+  private flushPlayTime() {
+    if (this.playTimeAcc > 0) {
+      addPlayTime(Math.floor(this.playTimeAcc));
+      this.playTimeAcc = 0;
+    }
   }
 
 
   dispose() {
     this.disposed = true;
+    this.flushPlayTime();
     cancelAnimationFrame(this.raf);
     window.removeEventListener("resize", this.resize);
     window.removeEventListener("orientationchange", this.resize);

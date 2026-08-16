@@ -13,6 +13,7 @@ import {
   type ScoreEntry,
   type MatchEntry,
 } from "@/game/shop";
+import { getTotalPlayTime, formatPlayTime } from "@/game/stats";
 
 import { renderProfileCard } from "@/lib/profileCard";
 
@@ -54,6 +55,7 @@ function ProfilePage() {
   const [coins, setCoins] = useState(0);
   const [board, setBoard] = useState<ScoreEntry[]>([]);
   const [history, setHistory] = useState<MatchEntry[]>([]);
+  const [playTime, setPlayTime] = useState(0);
   const [tab, setTab] = useState<"scores" | "history">("scores");
   const [levelFilter, setLevelFilter] = useState("");
   const [sort, setSort] = useState<"newest" | "score">("newest");
@@ -67,6 +69,7 @@ function ProfilePage() {
     setCoins(getBank());
     setBoard(getBoard());
     setHistory(getHistory());
+    setPlayTime(getTotalPlayTime());
   }, []);
 
   const PAGE_SIZE = 6;
@@ -172,6 +175,10 @@ function ProfilePage() {
           <div className="pf-stat">
             <strong>{(board[0]?.score ?? 0).toLocaleString()}</strong>
             <span>BEST SCORE</span>
+          </div>
+          <div className="pf-stat">
+            <strong>{formatPlayTime(playTime)}</strong>
+            <span>TIME PLAYED</span>
           </div>
         </div>
 
