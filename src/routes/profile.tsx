@@ -69,6 +69,7 @@ function ProfilePage() {
     setCoins(getBank());
     setBoard(getBoard());
     setHistory(getHistory());
+    setPlayTime(getTotalPlayTime());
   }, []);
 
   const PAGE_SIZE = 6;
