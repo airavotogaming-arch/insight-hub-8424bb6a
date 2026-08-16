@@ -1954,7 +1954,15 @@ export class CarnivalGame {
       secureSet(BEST_KEY, this.state.best);
     }
     this.blip(440, 0.5, "sine", 0.09, 180);
+    this.flushPlayTime();
     this.emit();
+  }
+
+  private flushPlayTime() {
+    if (this.playTimeAcc > 0) {
+      addPlayTime(Math.floor(this.playTimeAcc));
+      this.playTimeAcc = 0;
+    }
   }
 
 
