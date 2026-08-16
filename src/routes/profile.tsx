@@ -13,6 +13,7 @@ import {
   type ScoreEntry,
   type MatchEntry,
 } from "@/game/shop";
+import { getTotalPlayTime, formatPlayTime } from "@/game/stats";
 
 import { renderProfileCard } from "@/lib/profileCard";
 
