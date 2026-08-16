@@ -46,7 +46,7 @@ function AchievementsPage() {
     const res = claimAchievement(id);
     if (!res.ok) return;
     refresh();
-    setNote(`+${res.reward.toLocaleString()} coins claimed!`);
+    setNote(`+${res.reward.toLocaleString()} coins · +${res.gems} 💎 claimed!`);
     window.setTimeout(() => setNote(""), 2600);
   };
 
@@ -54,7 +54,9 @@ function AchievementsPage() {
     const res = claimAllAchievements();
     if (!res.count) return;
     refresh();
-    setNote(`${res.count} badge${res.count === 1 ? "" : "s"} claimed · +${res.reward.toLocaleString()} coins`);
+    setNote(
+      `${res.count} badge${res.count === 1 ? "" : "s"} claimed · +${res.reward.toLocaleString()} coins · +${res.gems} 💎`,
+    );
     window.setTimeout(() => setNote(""), 3000);
   };
 
@@ -128,10 +130,12 @@ function AchievementsPage() {
                 <span className="pg-badge done">CLAIMED</span>
               ) : a.claimable ? (
                 <button className="pg-claim" onClick={() => claim(a.id)}>
-                  🪙 {a.reward.toLocaleString()}
+                  🪙 {a.reward.toLocaleString()} · 💎 {a.gems}
                 </button>
               ) : (
-                <span className="pg-badge">🔒 {a.reward.toLocaleString()}</span>
+                <span className="pg-badge">
+                  🔒 {a.reward.toLocaleString()} · 💎 {a.gems}
+                </span>
               )}
             </li>
           ))}

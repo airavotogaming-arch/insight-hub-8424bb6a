@@ -4,6 +4,7 @@ import { GAMES_PER_REWARD, claimReward, getRewardState, type RewardState } from 
 import { getDailyState, type DailyState } from "@/game/daily";
 import { getSpinState } from "@/game/spin";
 import { getAchievements, type AchievementRow } from "@/game/achievements";
+import { getDiamonds } from "@/game/diamonds";
 
 import JoyBlasterLogo from "@/components/JoyBlasterLogo";
 import menuBg from "@/assets/menu-bg.png";
@@ -58,6 +59,7 @@ export default function MainMenu({
   const [spinReady, setSpinReady] = useState(false);
   const [missions, setMissions] = useState<AchievementRow[]>([]);
   const [daily, setDaily] = useState<DailyState | null>(null);
+  const [gems, setGems] = useState(0);
   const [gunId, setGunId] = useState("carnival");
   const equippedGun = getGunSkin(gunId);
 
@@ -65,6 +67,7 @@ export default function MainMenu({
   // read progress on mount and whenever the coin balance changes (i.e. after a round)
   useEffect(() => {
     setReward(getRewardState());
+    setGems(getDiamonds());
     setGunId(getEquippedGun());
     const d = getDailyState();
     setDaily(d);
@@ -91,7 +94,6 @@ export default function MainMenu({
   const level = Math.max(1, levelProp ?? Math.floor(best / 5000) + 1);
   const xp = best % 5000;
   const coins = bank;
-  const gems = Math.floor(best / 500);
   const tickets = Math.floor(bank / 100);
   const secondBest = board[1]?.score ?? Math.max(0, best - 1032);
 
