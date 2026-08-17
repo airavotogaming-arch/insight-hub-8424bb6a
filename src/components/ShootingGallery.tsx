@@ -1455,8 +1455,8 @@ export default function ShootingGallery() {
             <h2 className="fair-title text-[clamp(1.6rem,5vw,2.8rem)]">Leaderboard</h2>
             <p className="fair-sub">
               {speedBoard.length
-                ? "Fastest players — ranked by run time"
-                : "No timed runs yet — finish a round to set a time!"}
+                ? "Fastest full clears — all levels, start to finish"
+                : "No finished runs yet — clear every level to set a time!"}
             </p>
             <ul className="shop-board-list">
               {speedBoard.map((e, i) => (
@@ -1469,7 +1469,7 @@ export default function ShootingGallery() {
               ))}
               {!speedBoard.length && (
                 <li>
-                  <span>No times recorded yet — play a round!</span>
+                  <span>No times yet — finish all levels in one run!</span>
                 </li>
               )}
             </ul>
