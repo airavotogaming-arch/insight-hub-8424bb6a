@@ -7,6 +7,7 @@ import MainMenu from "@/components/MainMenu";
 
 
 import type { CarnivalGame, GameState } from "@/game/engine";
+import { TOTAL_LEVELS } from "@/game/engine";
 
 import {
   SHOP_ITEMS,

@@ -194,8 +194,8 @@ export interface SpeedEntry {
 }
 
 /**
- * Best (fastest) completed run per player, ordered fastest-first.
- * Higher level wins ties so a deeper clear always outranks a shallow one.
+ * Best (fastest) full-game clear per player, ordered fastest-first.
+ * Only runs that cleared every level are stored with a duration.
  */
 export const getSpeedBoard = (limit = 10): SpeedEntry[] => {
   const best = new Map<string, SpeedEntry>();
@@ -203,12 +203,11 @@ export const getSpeedBoard = (limit = 10): SpeedEntry[] => {
     const dur = Math.max(0, safeInt(m.dur ?? 0, 99_999));
     if (!m.name || dur <= 0) continue;
     const prev = best.get(m.name);
-    const better =
-      !prev || m.level > prev.level || (m.level === prev.level && dur < prev.dur);
+    const better = !prev || dur < prev.dur;
     if (better) best.set(m.name, { name: m.name, dur, level: m.level, score: m.score });
   }
   return [...best.values()]
-    .sort((a, b) => b.level - a.level || a.dur - b.dur || b.score - a.score)
+    .sort((a, b) => a.dur - b.dur || b.score - a.score)
     .slice(0, limit);
 };
 
