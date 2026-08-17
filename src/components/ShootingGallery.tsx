@@ -119,8 +119,10 @@ export default function ShootingGallery() {
   const [showHelp, setShowHelp] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [speedBoard, setSpeedBoard] = useState<SpeedEntry[]>([]);
-  /** epoch ms when the current round started — used to time the run */
+  /** epoch ms when the current run started at level 1 — used to time the full clear */
   const roundStartRef = useRef(0);
+  /** seconds taken to clear every level in the current run (0 = not finished) */
+  const finishDurRef = useRef(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const navigate = useNavigate();
   const openShop = () => navigate({ to: "/shop" });
@@ -295,6 +297,20 @@ export default function ShootingGallery() {
     return () => clearTimeout(t);
   }, [state.waveBanner?.id]);
 
+  // stamp the finish time the moment the last designed level is cleared
+  useEffect(() => {
+    if (
+      state.wave > TOTAL_LEVELS &&
+      !finishDurRef.current &&
+      roundStartRef.current
+    ) {
+      finishDurRef.current = Math.max(
+        1,
+        Math.round((Date.now() - roundStartRef.current) / 1000),
+      );
+    }
+  }, [state.wave]);
+
   // remember the highest level reached (shown on the menu badge)
   useEffect(() => {
     if (state.wave > maxLevel) {
@@ -315,10 +331,12 @@ export default function ShootingGallery() {
     if (state.phase === "over") {
       setBankState(getBank());
       const who = playerName || getPlayerName();
-      const dur = roundStartRef.current
-        ? Math.round((Date.now() - roundStartRef.current) / 1000)
-        : 0;
+      // only a full clear of every level counts for the leaderboard —
+      // quitting or dying part-way discards the time and the next run
+      // starts again from level 1
+      const dur = finishDurRef.current;
       roundStartRef.current = 0;
+      finishDurRef.current = 0;
       if (who && state.score > 0) {
         setBoard(saveScore(who, state.score));
         addMatch(who, state.score, state.wave, dur);
@@ -328,6 +346,11 @@ export default function ShootingGallery() {
     }
     if (state.phase === "playing" && !roundStartRef.current) {
       roundStartRef.current = Date.now();
+      finishDurRef.current = 0;
+    }
+    if (state.phase === "idle") {
+      roundStartRef.current = 0;
+      finishDurRef.current = 0;
     }
   }, [state.phase]);
 

@@ -124,6 +124,9 @@ const LEVELS: LevelDef[] = [
   { time: 45, boardEvery: 4, stock: 7, speed: 1.75, wrongSec: 5, bombSec: 7, goal: 20, name: "Grand Carnival" },
 ];
 
+/** Number of designed levels; clearing all of them finishes the game. */
+export const TOTAL_LEVELS = LEVELS.length;
+
 export function levelDef(level: number): LevelDef {
   const base = LEVELS[Math.min(level, LEVELS.length) - 1]!;
   if (level <= LEVELS.length) return base;
