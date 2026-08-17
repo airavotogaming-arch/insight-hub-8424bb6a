@@ -84,7 +84,6 @@ const INITIAL: GameState = {
   musicVolume: 0.7,
   sfxVolume: 0.9,
   bossHp: 0,
-  forbidden: null,
   ending: false,
   timeOfDay: "night",
   ammo: 20,
@@ -731,12 +730,10 @@ export default function ShootingGallery() {
       markInterstitialShown();
       void showInterstitial().finally(() => {
         setAdBusy(false);
-        gameRef.current?.prepareRound();
         setShowBriefing(true);
       });
       return;
     }
-    gameRef.current?.prepareRound();
     setShowBriefing(true);
   };
   const beginRound = () => {
@@ -909,12 +906,6 @@ export default function ShootingGallery() {
 
 
       {/* ---------- crosshair ---------- */}
-      {state.phase === "playing" && state.forbidden && (
-        <div className="forbidden-badge">
-          🚫 Don't shoot: {TOY_SPECS[state.forbidden].label}
-        </div>
-      )}
-
       {/* ---------- TARGET BOARD: the one object you may shoot ---------- */}
       {state.phase === "playing" && state.board && (
         <div className={`target-board ${state.fever ? "is-fever" : ""}`}>
@@ -1097,25 +1088,6 @@ export default function ShootingGallery() {
                 <SafeImage className="warning-thumb" src={asset("toys/bomb.png")} alt="Bomb" fallbackLabel="💣" width={44} height={44} />
                 <span>
                   <strong>Bombs</strong> blow 5 seconds off the clock and reset your combo. Never shoot them.
-                </span>
-              </div>
-              <div className="warning-row forbidden">
-                {state.forbidden ? (
-                  <SafeImage
-                    className="warning-thumb"
-                    fallbackLabel="🧸"
-                    src={asset(`toys/${state.forbidden}.png`)}
-                    alt={TOY_SPECS[state.forbidden].label}
-                    width={44}
-                    height={44}
-                  />
-                ) : (
-                  <span className="warning-icon">🚫</span>
-                )}
-                <span>
-                  This round's forbidden prize is{" "}
-                  <strong>{state.forbidden ? TOY_SPECS[state.forbidden].label : "…"}</strong>. Shoot it and you
-                  <strong> lose half your score</strong>.
                 </span>
               </div>
               <div className="warning-row">

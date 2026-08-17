@@ -42,8 +42,6 @@ export interface GameState {
   musicVolume: number;
   sfxVolume: number;
   bossHp: number;
-  /** toy the player must NOT shoot this round */
-  forbidden: ToyKind | null;
   /** cinematic slow-motion outro is running — input is locked */
   ending: boolean;
   /** lighting environment for the round */
@@ -107,7 +105,7 @@ export interface LevelDef {
   speed: number;
   /** seconds lost for shooting the wrong object */
   wrongSec: number;
-  /** seconds lost for a bomb / forbidden prize */
+  /** seconds lost for a bomb */
   bombSec: number;
   /** correct board hits needed to clear */
   goal: number;
@@ -304,7 +302,6 @@ export class CarnivalGame {
     musicVolume: 0.7,
     sfxVolume: 0.9,
     bossHp: 0,
-    forbidden: null,
     ending: false,
     timeOfDay: "night",
     ammo: MAX_AMMO,
@@ -838,7 +835,7 @@ export class CarnivalGame {
    * booth's timber side panels and sweep the shelves along the reflected path.
    * Side panels are the interesting bank: the bounce cuts sideways across a whole
    * row, so a shot fired into the gap beside a shelf can still reach a plush that
-   * is tucked behind another one. Hazards and the round's forbidden prize are
+   * is tucked behind another one. Hazards are
    * never eligible — a ricochet must not punish the player for aiming wide.
    */
   private tryBankShot(): boolean {
@@ -848,8 +845,7 @@ export class CarnivalGame {
         t.alive &&
         TOY_SPECS[t.kind].points > 0 &&
         t.kind !== "bomb" &&
-        t.kind !== "warning" &&
-        t.kind !== this.state.forbidden,
+        t.kind !== "warning",
     );
     if (!candidates.length) return false;
     const meshes = candidates.map((t) => t.group);
@@ -940,11 +936,10 @@ export class CarnivalGame {
     const lvl = levelDef(this.state.wave);
     const prev = this.state.board?.kind;
     const stocked = [...new Set(this.targets.filter((t) => t.alive).map((t) => t.kind))].filter(
-      (k) => BOARD_POOL.includes(k) && k !== this.state.forbidden,
+      (k) => BOARD_POOL.includes(k),
     );
-    const pool = (stocked.length >= 2 ? stocked : BOARD_POOL.filter((k) => k !== this.state.forbidden))
-      .filter((k) => k !== prev);
-    const fallback = BOARD_POOL.filter((k) => k !== this.state.forbidden);
+    const pool = (stocked.length >= 2 ? stocked : BOARD_POOL).filter((k) => k !== prev);
+    const fallback = [...BOARD_POOL];
     const from = pool.length ? pool : fallback;
     const kind = from[Math.floor(Math.random() * from.length)]!;
     this.state.board = { kind, timeLeft: lvl.boardEvery, every: lvl.boardEvery };
@@ -1144,27 +1139,6 @@ export class CarnivalGame {
     const lvl = levelDef(this.state.wave);
     this.timeFine = 0;
     this.wrongLabel = false;
-
-    if (t.kind === this.state.forbidden) {
-      // forbidden prize: half the score AND the bomb-sized clock penalty
-      const lost = Math.ceil(this.state.score / 2);
-      this.state.score = Math.max(0, this.state.score - lost);
-      this.state.combo = 1;
-      this.fineTime(lvl.bombSec);
-      this.burst(point, [0xff3b3b, 0xffd93d, 0xffffff], 34);
-      this.blip(200, 0.4, "sawtooth", 0.12, 70);
-      this.shake = 1.1;
-      this.buzz([40, 30, 60]);
-      this.state.toast = {
-        text: `FORBIDDEN ${spec.label}!`,
-        points: -lost,
-        time: lvl.bombSec,
-        id: ++this.toastId,
-      };
-      if (this.state.timeLeft <= 0) this.endGame();
-      this.emit();
-      return;
-    }
 
     if (bad) {
       // bomb: score hit, combo reset and the biggest clock penalty
@@ -1803,7 +1777,6 @@ export class CarnivalGame {
       ammo: MAX_AMMO,
       reloading: false,
       reloadLeft: 0,
-      forbidden: this.state.forbidden ?? pickForbidden(),
       board: null,
       orderStreak: 0,
       levelHits: 0,
@@ -1827,14 +1800,6 @@ export class CarnivalGame {
     this.startLevel(1);
     this.blip(520, 0.12, "triangle", 0.08, 900);
     this.emit();
-  }
-
-  /** choose the round's forbidden toy before the briefing popup */
-  prepareRound(): ToyKind {
-
-    this.state.forbidden = pickForbidden();
-    this.emit();
-    return this.state.forbidden;
   }
 
   /** switch the booth between a sunny afternoon and the neon night fair */
@@ -1984,10 +1949,6 @@ export class CarnivalGame {
     this.renderer.dispose();
     void this.audio?.close();
   }
-}
-
-function pickForbidden(): ToyKind {
-  return PICKABLE[Math.floor(Math.random() * PICKABLE.length)]!;
 }
 
 function clamp01(v: number) {
