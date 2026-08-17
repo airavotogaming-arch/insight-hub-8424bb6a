@@ -21,6 +21,9 @@ import {
   renameBoardEntries,
   addMatch,
   renameHistoryEntries,
+  getSpeedBoard,
+  formatDuration,
+  type SpeedEntry,
 
 
   getOwnedGuns,
@@ -118,6 +121,9 @@ export default function ShootingGallery() {
   const [showHelp, setShowHelp] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [globalBoard, setGlobalBoard] = useState<LeaderboardEntry[] | null>(null);
+  const [speedBoard, setSpeedBoard] = useState<SpeedEntry[]>([]);
+  /** epoch ms when the current round started — used to time the run */
+  const roundStartRef = useRef(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const navigate = useNavigate();
   const openShop = () => navigate({ to: "/shop" });
@@ -305,6 +311,7 @@ export default function ShootingGallery() {
   useEffect(() => {
     if (!showLeaderboard) return;
     let alive = true;
+    setSpeedBoard(getSpeedBoard(10));
     void playgamaLeaderboard(10).then((rows) => {
       if (alive) setGlobalBoard(rows);
     });
@@ -318,11 +325,19 @@ export default function ShootingGallery() {
     if (state.phase === "over") {
       setBankState(getBank());
       const who = playerName || getPlayerName();
+      const dur = roundStartRef.current
+        ? Math.round((Date.now() - roundStartRef.current) / 1000)
+        : 0;
+      roundStartRef.current = 0;
       if (who && state.score > 0) {
         setBoard(saveScore(who, state.score));
-        addMatch(who, state.score, state.wave);
+        addMatch(who, state.score, state.wave, dur);
+        setSpeedBoard(getSpeedBoard(10));
       }
       void playgamaSubmitScore(state.score, who || undefined);
+    }
+    if (state.phase === "playing" && !roundStartRef.current) {
+      roundStartRef.current = Date.now();
     }
   }, [state.phase]);
 
@@ -1425,27 +1440,22 @@ export default function ShootingGallery() {
           <div className="overlay-card help-card" onClick={(e) => e.stopPropagation()}>
             <h2 className="fair-title text-[clamp(1.6rem,5vw,2.8rem)]">Leaderboard</h2>
             <p className="fair-sub">
-              {globalBoard === null
-                ? "Loading global scores…"
-                : globalBoard.length
-                  ? "Top players worldwide"
-                  : "Global scores unavailable here — showing your local board"}
+              {speedBoard.length
+                ? "Fastest players — ranked by run time"
+                : "No timed runs yet — finish a round to set a time!"}
             </p>
             <ul className="shop-board-list">
-              {(globalBoard && globalBoard.length
-                ? globalBoard
-                : board.map((e) => ({ name: e.name, score: e.score }))
-              ).map((e, i) => (
+              {speedBoard.map((e, i) => (
                 <li key={`${e.name}-${i}`}>
                   <span>
-                    {i + 1}. {e.name}
+                    {i + 1}. {e.name} · Lv {e.level}
                   </span>
-                  <strong>{e.score.toLocaleString()}</strong>
+                  <strong>{formatDuration(e.dur)}</strong>
                 </li>
               ))}
-              {!board.length && globalBoard !== null && !globalBoard.length && (
+              {!speedBoard.length && (
                 <li>
-                  <span>No scores yet — play a round!</span>
+                  <span>No times recorded yet — play a round!</span>
                 </li>
               )}
             </ul>
