@@ -105,7 +105,7 @@ export interface LevelDef {
   speed: number;
   /** seconds lost for shooting the wrong object */
   wrongSec: number;
-  /** seconds lost for a bomb / forbidden prize */
+  /** seconds lost for a bomb */
   bombSec: number;
   /** correct board hits needed to clear */
   goal: number;
