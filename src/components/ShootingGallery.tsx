@@ -7,6 +7,7 @@ import MainMenu from "@/components/MainMenu";
 
 
 import type { CarnivalGame, GameState } from "@/game/engine";
+import { TOTAL_LEVELS } from "@/game/engine";
 
 import {
   SHOP_ITEMS,
@@ -119,8 +120,10 @@ export default function ShootingGallery() {
   const [showHelp, setShowHelp] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [speedBoard, setSpeedBoard] = useState<SpeedEntry[]>([]);
-  /** epoch ms when the current round started — used to time the run */
+  /** epoch ms when the current run started at level 1 — used to time the full clear */
   const roundStartRef = useRef(0);
+  /** seconds taken to clear every level in the current run (0 = not finished) */
+  const finishDurRef = useRef(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const navigate = useNavigate();
   const openShop = () => navigate({ to: "/shop" });
@@ -295,6 +298,20 @@ export default function ShootingGallery() {
     return () => clearTimeout(t);
   }, [state.waveBanner?.id]);
 
+  // stamp the finish time the moment the last designed level is cleared
+  useEffect(() => {
+    if (
+      state.wave > TOTAL_LEVELS &&
+      !finishDurRef.current &&
+      roundStartRef.current
+    ) {
+      finishDurRef.current = Math.max(
+        1,
+        Math.round((Date.now() - roundStartRef.current) / 1000),
+      );
+    }
+  }, [state.wave]);
+
   // remember the highest level reached (shown on the menu badge)
   useEffect(() => {
     if (state.wave > maxLevel) {
@@ -315,10 +332,12 @@ export default function ShootingGallery() {
     if (state.phase === "over") {
       setBankState(getBank());
       const who = playerName || getPlayerName();
-      const dur = roundStartRef.current
-        ? Math.round((Date.now() - roundStartRef.current) / 1000)
-        : 0;
+      // only a full clear of every level counts for the leaderboard —
+      // quitting or dying part-way discards the time and the next run
+      // starts again from level 1
+      const dur = finishDurRef.current;
       roundStartRef.current = 0;
+      finishDurRef.current = 0;
       if (who && state.score > 0) {
         setBoard(saveScore(who, state.score));
         addMatch(who, state.score, state.wave, dur);
@@ -328,6 +347,11 @@ export default function ShootingGallery() {
     }
     if (state.phase === "playing" && !roundStartRef.current) {
       roundStartRef.current = Date.now();
+      finishDurRef.current = 0;
+    }
+    if (state.phase === "idle") {
+      roundStartRef.current = 0;
+      finishDurRef.current = 0;
     }
   }, [state.phase]);
 
@@ -1431,8 +1455,8 @@ export default function ShootingGallery() {
             <h2 className="fair-title text-[clamp(1.6rem,5vw,2.8rem)]">Leaderboard</h2>
             <p className="fair-sub">
               {speedBoard.length
-                ? "Fastest players — ranked by run time"
-                : "No timed runs yet — finish a round to set a time!"}
+                ? "Fastest full clears — all levels, start to finish"
+                : "No finished runs yet — clear every level to set a time!"}
             </p>
             <ul className="shop-board-list">
               {speedBoard.map((e, i) => (
@@ -1445,7 +1469,7 @@ export default function ShootingGallery() {
               ))}
               {!speedBoard.length && (
                 <li>
-                  <span>No times recorded yet — play a round!</span>
+                  <span>No times yet — finish all levels in one run!</span>
                 </li>
               )}
             </ul>
