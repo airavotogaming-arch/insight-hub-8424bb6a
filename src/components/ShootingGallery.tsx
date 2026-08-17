@@ -51,8 +51,6 @@ import {
   showInterstitial,
   showRewarded,
   playgamaSubmitScore,
-  playgamaLeaderboard,
-  type LeaderboardEntry,
 } from "@/lib/playgama";
 import {
   shouldShowInterstitial,
@@ -120,7 +118,6 @@ export default function ShootingGallery() {
   const [holding, setHolding] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [globalBoard, setGlobalBoard] = useState<LeaderboardEntry[] | null>(null);
   const [speedBoard, setSpeedBoard] = useState<SpeedEntry[]>([]);
   /** epoch ms when the current round started — used to time the run */
   const roundStartRef = useRef(0);
@@ -307,17 +304,10 @@ export default function ShootingGallery() {
   }, [state.wave, maxLevel]);
 
 
-  // pull the global leaderboard whenever the panel opens
+  // refresh the fastest-times board whenever the panel opens
   useEffect(() => {
     if (!showLeaderboard) return;
-    let alive = true;
     setSpeedBoard(getSpeedBoard(10));
-    void playgamaLeaderboard(10).then((rows) => {
-      if (alive) setGlobalBoard(rows);
-    });
-    return () => {
-      alive = false;
-    };
   }, [showLeaderboard]);
 
   // when a round ends, refresh the ticket bank and record the score under the saved name
